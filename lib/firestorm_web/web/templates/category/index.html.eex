@@ -4,7 +4,7 @@
   <%= for category <- @categories do %>
     <li>
       <h2 class="title">
-        <%= link category.title, to: category_path(@conn, :show, category.id) %>
+        <%= category_link(@conn, category) %>
       </h2>
     </li>
   <% end %>
