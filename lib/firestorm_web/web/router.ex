@@ -2,6 +2,7 @@ defmodule FirestormWeb.Web.Router do
   use FirestormWeb.Web, :router
 
   pipeline :browser do
+    plug Ueberauth
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_flash
@@ -11,6 +12,18 @@ defmodule FirestormWeb.Web.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+  end
+
+  # We also need to add the Ueberauth routes. This will set up the redirect and
+  # callback for our OAuth provider steps
+  scope "/auth", FirestormWeb.Web do
+    pipe_through :browser
+
+    delete "/logout", AuthController, :delete
+    get "/logout", AuthController, :delete
+    get "/:provider", AuthController, :request
+    get "/:provider/callback", AuthController, :callback
+    post "/:provider/callback", AuthController, :callback
   end
 
   scope "/", FirestormWeb.Web do
