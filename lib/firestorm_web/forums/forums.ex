@@ -4,9 +4,10 @@ defmodule FirestormWeb.Forums do
   """
 
   import Ecto.{Query, Changeset}, warn: false
+  alias Ecto.Multi
   alias FirestormWeb.Repo
 
-  alias FirestormWeb.Forums.User
+  alias FirestormWeb.Forums.{User, Category, Thread, Post}
 
   @doc """
   Returns the list of users.
@@ -111,8 +112,6 @@ defmodule FirestormWeb.Forums do
     |> unique_constraint(:username)
   end
 
-  alias FirestormWeb.Forums.Category
-
   @doc """
   Returns the list of categories.
 
@@ -213,8 +212,6 @@ defmodule FirestormWeb.Forums do
     |> validate_required([:title])
   end
 
-  alias FirestormWeb.Forums.Thread
-
   @doc """
   Returns the list of threads.
 
@@ -255,17 +252,78 @@ defmodule FirestormWeb.Forums do
 
   ## Examples
 
-      iex> create_thread(%{field: value})
-      {:ok, %Thread{}}
+      iex> create_thread(category, user, %{field: value, body: "some body"})
+      {:ok, {%Thread{}, %Post{}}}
 
-      iex> create_thread(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+      iex> create_thread(category, user, %{field: bad_value})
+      {:error, :thread, %Ecto.Changeset{}}
 
   """
-  def create_thread(attrs \\ %{}) do
-    %Thread{}
-    |> thread_changeset(attrs)
-    |> Repo.insert()
+  def create_thread(category, user, attrs \\ %{}) do
+    # We'll build as much of the post attributes we can for now - everything but
+    # the thread id
+    post_attrs =
+      attrs
+      |> Map.take([:body])
+      |> Map.put(:user_id, user.id)
+
+    # We'll also build the thread attributes a bit more explicitly
+    thread_attrs =
+      attrs
+      |> Map.take([:title])
+      |> Map.put(:category_id, category.id)
+
+    # We'll generate a thread changeset
+    thread_changeset =
+      %Thread{}
+      |> thread_changeset(thread_attrs)
+
+    # And we'll start a new Ecto.Multi.
+    # This is a data structure that identifies the changes that we wish to make.
+    # We'll run it later in a `Repo.transaction`
+    multi =
+      # We create a new Multi with Multi.new
+      Multi.new
+      # We'll insert our thread. The first argument here is the key by which we
+      # can refer to this operation when we get the results or when we use
+      # intermediate values mid-transaction in future `Multi` functions
+      |> Multi.insert(:thread, thread_changeset)
+      # Once we've inserted the thread, we'll use `Multi.run` so we can
+      # reference the resulting thread to extract its id
+      |> Multi.run(:post, fn %{thread: thread} ->
+        # We'll add the thread_id to our post attributes
+        post_attrs =
+          post_attrs
+          |> Map.put(:thread_id, thread.id)
+
+        # We generate the post changeset and insert it
+        post_changeset =
+          %Post{}
+          |> post_changeset(post_attrs)
+          |> Repo.insert
+      end)
+
+    # Now we've described the transaction. All that remains is to actually run
+    # the transaction. This is accomplished by passing our Multi to
+    # Repo.transaction.
+    case Repo.transaction(multi) do
+      # if it succeeds, we'll get an ok-tuple containing the result, which is a
+      # map of our keys with the result of each operation. In this case, we'll
+      # have a map with a `thread` and a `post` key.
+      {:ok, result} ->
+        # We'll return them in a 2-tuple, which is how I decided this return
+        # should look.
+        {:ok, {result.thread, result.post}}
+      # In the event of an error, we get a 4-tuple containing :error, the key
+      # that errored, the changeset for the error, and a map of the changes that
+      # have occurred so far. We'll just return the thread changeset if there
+      # was an error there.
+      {:error, :thread, thread_changeset, _changes_so_far} ->
+        {:error, :thread, thread_changeset}
+      # Ditto for the post changeset if there's an error there.
+      {:error, :post, post_changeset, _changes_so_far} ->
+        {:error, :post, post_changeset}
+    end
   end
 
   @doc """
@@ -330,4 +388,20 @@ defmodule FirestormWeb.Forums do
     end
   end
 
+  def create_post(%Thread{} = thread, %User{} = user, attrs) do
+    attrs =
+      attrs
+      |> Map.put(:thread_id, thread.id)
+      |> Map.put(:user_id, user.id)
+
+    %Post{}
+    |> post_changeset(attrs)
+    |> Repo.insert()
+  end
+
+  defp post_changeset(%Post{} = post, attrs) do
+    post
+    |> cast(attrs, [:body, :thread_id, :user_id])
+    |> validate_required([:body, :thread_id, :user_id])
+  end
 end
