@@ -273,57 +273,25 @@ defmodule FirestormWeb.Forums do
       |> Map.take([:title])
       |> Map.put(:category_id, category.id)
 
-    # We'll generate a thread changeset
-    thread_changeset =
-      %Thread{}
-      |> thread_changeset(thread_attrs)
+    %{thread: thread_attrs, post: post_attrs}
+    |> new_thread_changeset
+    |> Repo.insert
+  end
 
-    # And we'll start a new Ecto.Multi.
-    # This is a data structure that identifies the changes that we wish to make.
-    # We'll run it later in a `Repo.transaction`
-    multi =
-      # We create a new Multi with Multi.new
-      Multi.new
-      # We'll insert our thread. The first argument here is the key by which we
-      # can refer to this operation when we get the results or when we use
-      # intermediate values mid-transaction in future `Multi` functions
-      |> Multi.insert(:thread, thread_changeset)
-      # Once we've inserted the thread, we'll use `Multi.run` so we can
-      # reference the resulting thread to extract its id
-      |> Multi.run(:post, fn %{thread: thread} ->
-        # We'll add the thread_id to our post attributes
-        post_attrs =
-          post_attrs
-          |> Map.put(:thread_id, thread.id)
+  defp new_thread_changeset(%{thread: thread_attrs, post: post_attrs}) do
+    # First we'll generate a post changeset - we don't require a thread_id here
+    # because we'll build it momentarily and it's impossible to know.
+    post_changeset =
+      %Post{}
+      |> cast(post_attrs, [:body, :user_id])
+      |> validate_required([:body, :user_id])
 
-        # We generate the post changeset and insert it
-        post_changeset =
-          %Post{}
-          |> post_changeset(post_attrs)
-          |> Repo.insert
-      end)
-
-    # Now we've described the transaction. All that remains is to actually run
-    # the transaction. This is accomplished by passing our Multi to
-    # Repo.transaction.
-    case Repo.transaction(multi) do
-      # if it succeeds, we'll get an ok-tuple containing the result, which is a
-      # map of our keys with the result of each operation. In this case, we'll
-      # have a map with a `thread` and a `post` key.
-      {:ok, result} ->
-        # We'll return them in a 2-tuple, which is how I decided this return
-        # should look.
-        {:ok, {result.thread, result.post}}
-      # In the event of an error, we get a 4-tuple containing :error, the key
-      # that errored, the changeset for the error, and a map of the changes that
-      # have occurred so far. We'll just return the thread changeset if there
-      # was an error there.
-      {:error, :thread, thread_changeset, _changes_so_far} ->
-        {:error, :thread, thread_changeset}
-      # Ditto for the post changeset if there's an error there.
-      {:error, :post, post_changeset, _changes_so_far} ->
-        {:error, :post, post_changeset}
-    end
+    # Then we'll build our thread changeset like before, but we'll put a new
+    # associated post into the changeset. There's only one post since it's the
+    # first one, so we make a new list with just our one post in it.
+    %Thread{}
+    |> thread_changeset(thread_attrs)
+    |> put_assoc(:posts, [post_changeset])
   end
 
   @doc """

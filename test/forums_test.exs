@@ -2,7 +2,7 @@ defmodule FirestormWeb.ForumsTest do
   use FirestormWeb.DataCase
 
   alias FirestormWeb.Forums
-  alias FirestormWeb.Forums.{User, Category, Thread, Post}
+  alias FirestormWeb.Forums.{User, Category, Thread}
 
   @create_user_attrs %{email: "some email", name: "some name", username: "some username"}
   @update_user_attrs %{email: "some updated email", name: "some updated name", username: "some updated username"}
@@ -27,9 +27,7 @@ defmodule FirestormWeb.ForumsTest do
   end
 
   def fixture(:thread, category, user, attrs) do
-    # We'll return a 2-tuple containing the thread and its first post, in the
-    # case of success
-    {:ok, {thread, _first_post}} = Forums.create_thread(category, user, attrs)
+    {:ok, thread} = Forums.create_thread(category, user, attrs)
     thread
   end
 
@@ -128,23 +126,30 @@ defmodule FirestormWeb.ForumsTest do
 
     test "list_threads/1 returns all threads", %{category: category, user: user} do
       thread = fixture(:thread, category, user, @create_thread_attrs)
-      assert Forums.list_threads(category) == [thread]
+      expected = [thread.title]
+      result =
+        category
+        |> Forums.list_threads
+        |> Enum.map(&(&1.title))
+
+      assert expected == result
     end
 
     test "get_thread! returns the thread with given id", %{category: category, user: user} do
       thread = fixture(:thread, category, user, @create_thread_attrs)
-      assert Forums.get_thread!(category, thread.id) == thread
+      assert Forums.get_thread!(category, thread.id).title == thread.title
     end
 
-    test "create_thread/3 with valid data creates a thread and its first post", %{category: category, user: user} do
-      assert {:ok, {%Thread{} = thread, %Post{} = first_post}} = Forums.create_thread(category, user, @create_thread_attrs)
+    test "create_thread/1 with valid data creates a thread and its first post", %{category: category, user: user} do
+      assert {:ok, %Thread{} = thread} = Forums.create_thread(category, user, @create_thread_attrs)
       assert thread.title == "some title"
+      first_post = hd(thread.posts)
       assert first_post.thread_id == thread.id
       assert first_post.body == "some body"
     end
 
-    test "create_thread/3 with invalid data returns error changeset", %{category: category, user: user} do
-      assert {:error, :thread, %Ecto.Changeset{}} = Forums.create_thread(category, user, @invalid_thread_attrs)
+    test "create_thread/1 with invalid data returns error changeset", %{category: category, user: user} do
+      assert {:error, %Ecto.Changeset{}} = Forums.create_thread(category, user, @invalid_thread_attrs)
     end
 
     test "update_thread/2 with valid data updates the thread", %{category: category, user: user} do
@@ -157,7 +162,7 @@ defmodule FirestormWeb.ForumsTest do
     test "update_thread/2 with invalid data returns error changeset", %{category: category, user: user} do
       thread = fixture(:thread, category, user, @create_thread_attrs)
       assert {:error, %Ecto.Changeset{}} = Forums.update_thread(thread, @invalid_thread_attrs)
-      assert thread == Forums.get_thread!(category, thread.id)
+      assert thread.title == Forums.get_thread!(category, thread.id).title
     end
 
     test "delete_thread/1 deletes the thread", %{category: category, user: user} do
