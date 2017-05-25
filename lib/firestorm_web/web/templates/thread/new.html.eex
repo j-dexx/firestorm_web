@@ -1,4 +1,4 @@
-<h2>Start a new Thread</h2>
+<h2>Start a new thread</h2>
 
 <%= form_for @changeset, category_thread_path(@conn, :create, @category), [class: "new-thread"], fn f -> %>
   <%= text_input f, :title, placeholder: "Type a title" %>

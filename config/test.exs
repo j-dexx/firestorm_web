@@ -4,7 +4,7 @@ use Mix.Config
 # you can enable the server option below.
 config :firestorm_web, FirestormWeb.Web.Endpoint,
   http: [port: 4001],
-  server: false
+  server: true
 
 # Print only warnings and errors during test
 config :logger, level: :warn
@@ -17,3 +17,5 @@ config :firestorm_web, FirestormWeb.Repo,
   database: "firestorm_web_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+config :firestorm_web, sql_sandbox: true
