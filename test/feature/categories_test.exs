@@ -2,15 +2,21 @@ defmodule FirestormWeb.Feature.CategoriesTest do
   use FirestormWeb.Web.FeatureCase, async: true
   alias FirestormWeb.Forums
 
-  defmodule Page.CategoriesIndex do
-    import Wallaby.Query
+  test "creating a new category", %{session: session} do
+    import Page.Category.New
+    import Page.Category.Index, only: [new_category_link: 0]
+    import Page.Category.Show
 
-    def categories(count), do: css("ol.category-list li", count: count)
-    def category_title(text), do: css("h2.title", text: text)
+    session
+    |> visit("/")
+    |> click(new_category_link())
+    |> fill_in(title_field(), with: "Erlang")
+    |> click(create_category_button())
+    |> assert_has(category_title("Erlang"))
   end
 
   test "categories are listed", %{session: session} do
-    import Page.CategoriesIndex
+    import Page.Category.Index
     # We'll create some categories
     {:ok, [_elixir, _elm]} = create_categories(["Elixir", "Elm"])
 

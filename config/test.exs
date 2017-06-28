@@ -19,3 +19,5 @@ config :firestorm_web, FirestormWeb.Repo,
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :firestorm_web, sql_sandbox: true
+
+config :wallaby, screenshot_on_failure: true
