@@ -40,9 +40,14 @@ defmodule FirestormWeb.Mixfile do
       {:ueberauth, "~> 0.4"},
       {:ueberauth_github, "~> 0.4"},
       {:earmark, "~> 1.2.2"},
+      {:exmoji, "~> 0.2.2"},
 
       # Test dependencies
       {:wallaby, "~> 0.17.0", only: [:test]},
+
+      # OVERRIDES
+      # We can remove this override once we're on exmoji > 0.2.2
+      {:poison, "~> 3.0", override: true},
     ]
   end
 

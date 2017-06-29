@@ -11,7 +11,8 @@ defmodule FirestormWeb.Markdown do
 
   def earmark_options() do
     %Earmark.Options{
-      code_class_prefix: "language-"
+      code_class_prefix: "language-",
+      renderer: FirestormWeb.Markdown.HtmlRenderer,
     }
   end
 
