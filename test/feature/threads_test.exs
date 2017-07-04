@@ -19,6 +19,17 @@ defmodule FirestormWeb.Feature.ThreadsTest do
     |> Browser.take_screenshot()
   end
 
+  test "creating a new thread when unauthenticated", %{session: session} do
+    import Page.Layout
+    import Page.Category.Show
+    {:ok, [elixir]} = create_categories(["Elixir"])
+
+    session
+    |> visit(category_path(FirestormWeb.Web.Endpoint, :show, elixir))
+    |> click(new_thread_link())
+    |> assert_has(error("You must be logged in to access this page."))
+  end
+
   # We'll move this to a factories helper at some point
   def create_categories(titles) do
     categories =

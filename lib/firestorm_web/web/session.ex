@@ -5,6 +5,9 @@ defmodule FirestormWeb.Web.Session do
 
   alias FirestormWeb.Forums
 
+  # If the conn contains an assign of current user return that user
+  def current_user(%{assigns: %{current_user: u}}), do: u
+  # otherwise fetch the user from the db
   def current_user(conn) do
     case get_current_user(conn) do
       nil ->
