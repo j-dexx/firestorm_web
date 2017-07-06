@@ -41,6 +41,8 @@ defmodule FirestormWeb.Mixfile do
       {:ueberauth_github, "~> 0.4"},
       {:earmark, "~> 1.2.2"},
       {:exmoji, "~> 0.2.2"},
+      {:scrivener_ecto, "~> 1.2.2"},
+      {:scrivener_html, "~> 1.7"},
 
       # Test dependencies
       {:wallaby, "~> 0.17.0", only: [:test]},

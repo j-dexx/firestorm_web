@@ -375,4 +375,10 @@ defmodule FirestormWeb.Forums do
     |> cast(attrs, [:body, :thread_id, :user_id])
     |> validate_required([:body, :thread_id, :user_id])
   end
+
+  def user_posts(user, %{page: page}) do
+    Post
+    |> where([p], p.user_id == ^user.id)
+    |> Repo.paginate(page: page)
+  end
 end
