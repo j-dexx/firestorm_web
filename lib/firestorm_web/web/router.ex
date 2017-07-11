@@ -43,4 +43,9 @@ defmodule FirestormWeb.Web.Router do
   # scope "/api", FirestormWeb.Web do
   #   pipe_through :api
   # end
+  scope "/api/v1", FirestormWeb.Web.Api.V1 do
+     pipe_through :api
+
+    resources "/preview", PreviewController, only: [:create]
+  end
 end
