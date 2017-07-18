@@ -36,6 +36,10 @@ config :ueberauth, Ueberauth.Strategy.Github.OAuth,
   client_id: System.get_env("GITHUB_CLIENT_ID"),
   client_secret: System.get_env("GITHUB_CLIENT_SECRET")
 
+config :firestorm_web, FirestormWeb.Mailer,
+  adapter: Bamboo.SendGridAdapter,
+  api_key: System.get_env("SENDGRID_API_KEY")
+
 config :scrivener_html,
   routes_helper: FirestormWeb.Web.Router.Helpers,
   view_style: :bootstrap

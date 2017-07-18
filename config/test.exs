@@ -20,4 +20,7 @@ config :firestorm_web, FirestormWeb.Repo,
 
 config :firestorm_web, sql_sandbox: true
 
+config :firestorm_web, FirestormWeb.Mailer,
+  adapter: Bamboo.TestAdapter
+
 config :wallaby, screenshot_on_failure: true

@@ -14,6 +14,7 @@ defmodule FirestormWeb.Application do
       supervisor(FirestormWeb.Web.Endpoint, []),
       # Start your own worker by calling: FirestormWeb.Worker.start_link(arg1, arg2, arg3)
       # worker(FirestormWeb.Worker, [arg1, arg2, arg3]),
+      worker(FirestormWeb.Notifications, [])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

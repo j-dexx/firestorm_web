@@ -43,6 +43,7 @@ defmodule FirestormWeb.Mixfile do
       {:exmoji, "~> 0.2.2"},
       {:scrivener_ecto, "~> 1.2.2"},
       {:scrivener_html, "~> 1.7"},
+      {:bamboo, github: "thoughtbot/bamboo"},
 
       # Test dependencies
       {:wallaby, "~> 0.17.0", only: [:test]},
