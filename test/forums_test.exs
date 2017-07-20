@@ -93,6 +93,13 @@ defmodule FirestormWeb.ForumsTest do
     assert category.title == "some title"
   end
 
+  test "create_category/1 automatically generates a slug" do
+    assert {:ok, %Category{} = category} = Forums.create_category(@create_category_attrs)
+    assert category.slug == "some-title"
+    assert {:ok, %Category{} = category} = Forums.create_category(@create_category_attrs)
+    assert category.slug == "some-title-1"
+  end
+
   test "create_category/1 with invalid data returns error changeset" do
     assert {:error, %Ecto.Changeset{}} = Forums.create_category(@invalid_category_attrs)
   end
@@ -174,6 +181,13 @@ defmodule FirestormWeb.ForumsTest do
     test "change_thread/1 returns a thread changeset", %{category: category, user: user} do
       thread = fixture(:thread, category, user, @create_thread_attrs)
       assert %Ecto.Changeset{} = Forums.change_thread(thread)
+    end
+
+    test "create_thread/2 automatically generates a slug", %{category: category, user: user} do
+      assert {:ok, %Thread{} = thread} = Forums.create_thread(category, user, @create_thread_attrs)
+      assert thread.slug == "some-title"
+      assert {:ok, %Thread{} = thread} = Forums.create_thread(category, user, @create_thread_attrs)
+      assert thread.slug == "some-title-1"
     end
   end
 
