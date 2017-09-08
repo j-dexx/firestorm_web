@@ -1,6 +1,7 @@
 defmodule FirestormWeb.Web.Api.V1.UploadSignatureControllerTest do
   use FirestormWeb.Web.ConnCase
 
+  @tag :skip
   test "POST /", %{conn: conn} do
     upload = %{
       "filename" => "image.jpg",
